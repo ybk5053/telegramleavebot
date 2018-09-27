@@ -1,0 +1,5 @@
+sessions - Copy.py
+*.sqlite
+__pycache__/*
+keys.py
+python.exe - Shortcut.lnk
