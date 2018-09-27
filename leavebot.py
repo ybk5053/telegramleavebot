@@ -16,6 +16,8 @@ import keys
 
 sessions = []
 
+#todo change callback_query less predictable
+
 token = keys.token
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.INFO)
 
@@ -65,6 +67,14 @@ def handle_text(bot, update):
                 s = Waitactionsession(res.session, res.reply)
                 sessions.append(s)
                 bot.send_message(chat_id=update.message.chat_id, text=s.reply, reply_markup=InlineKeyboardMarkup(s.keyboard))
+                if res.reply == "Leave application send to supervisor" && not res.session.admin:
+                    db = DBHelper()
+                    super_id = db.findsuper(res.session.dept)
+                    db.close()
+                    #s = Session(chatid=super_id, starttime=datetime.datetime.now())
+                    #ss = Tryloginsession(s, res.session.user + " has applied for leave. Login to check")
+                    #sessions.append(ss)
+                    bot.send_message(chat_id=super_id, text=res.session.user + " has applied for leave. Login to check")
         else:
             sessions.append(res.session)
             if not res.session.keyboard is None:

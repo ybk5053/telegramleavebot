@@ -33,7 +33,10 @@ class Waitactionsession(Session):
         if data == "Apply":
             return retval(Applystartdatesession(self, datetime.datetime.now()))
         elif data == "Check":
-            return
+            if admin:
+                #return retval(Seeothersession(self))
+            else:
+                #return retval(Seeleavesession(self))
         elif data == "Add":
             if self.admin:
                 return retval(Addusersession(self))

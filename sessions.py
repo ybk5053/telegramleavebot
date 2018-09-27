@@ -55,11 +55,15 @@ class Session:
             
 
 class Waitdatesession(Session):
-    def __init__(self, chatsession, showndate):
+    def __init__(self, chatsession, showndate, blockdate=None):
         super().__init__(session=chatsession)
         self.leavestart = chatsession.leavestart
         self.leaveend = chatsession.leaveend
         self.showndate = showndate
+        if blockdate is None:
+            self.blockdate = datetime.datetime.now()
+        else:
+            self.blockdate = blockdate
         self.keyboard = self.calendar(showndate)
         
     def handle(self, time, lastmessageid):
@@ -93,7 +97,7 @@ class Waitdatesession(Session):
         
         
     def calendar(self, time):
-        return create_calendar(time.year, time.month)
+        return create_calendar(time.year, time.month, self.blockdate)
         
         
         

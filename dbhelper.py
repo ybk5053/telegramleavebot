@@ -9,7 +9,7 @@ class DBHelper:
         self.conn = sqlite3.connect(dbname)
         
     def setup(self):
-        stmt = "CREATE TABLE IF NOT EXISTS mydb (user TEXT, pass TEXT, dept TEXT, admin TEXT, totalleave TEXT remaining TEXT)"
+        stmt = "CREATE TABLE IF NOT EXISTS mydb (user TEXT, pass TEXT, dept TEXT, admin TEXT, totalleave TEXT, remaining TEXT, chatid TEXT)"
         self.conn.execute(stmt)
         self.conn.commit()
         
@@ -23,10 +23,10 @@ class DBHelper:
             stmt = "SELECT admin,dept FROM mydb WHERE user = ? AND pass = ?"
             cur.execute(stmt, args)
             res = cur.fetchone()
-            #stmt = "UPDATE mydb SET chatid = ? WHERE user = ?"
-            #args = (chatid, user)
-            #cur.execute(stmt, args)
-            #self.conn.commit()
+            stmt = "UPDATE mydb SET chatid = ? WHERE user = ?"
+            args = (chatid, user)
+            cur.execute(stmt, args)
+            self.conn.commit()
             cur.close()
             return res
         else:
@@ -35,14 +35,14 @@ class DBHelper:
             
     def createuser(self, name, pin, dept, admin):
         cur = self.conn.cursor()
-        stmt = "INSERT into mydb VALUES (?, ?, ?, ?, '10', '10')"
+        stmt = "INSERT into mydb(user,pass,dept,admin,totalleave,remaining) VALUES (?, ?, ?, ?, '10', '10')"
         args = (name, pin, dept, admin)
         cur.execute(stmt, args)
-        stmt = "CREATE TABLE IF NOT EXISTS approve_" + name + " (id INTEGER PRIMARY KEY, start TEXT, end TEXT, days TEXT, reason TEXT)"
+        stmt = "CREATE TABLE IF NOT EXISTS approve_" + name + " (id TEXT, start TEXT, end TEXT, days TEXT, reason TEXT)"
         cur.execute(stmt)
-        stmt = "CREATE TABLE IF NOT EXISTS apply_" + name + " (id INTEGER PRIMARY KEY, start TEXT, end TEXT, days TEXT, reason TEXT)"
+        stmt = "CREATE TABLE IF NOT EXISTS apply_" + name + " (id TEXT, start TEXT, end TEXT, days TEXT, reason TEXT)"
         cur.execute(stmt)
-        stmt = "CREATE TABLE IF NOT EXISTS reject_" + name + " (id INTEGER PRIMARY KEY, start TEXT, end TEXT, days TEXT, reason TEXT)"
+        stmt = "CREATE TABLE IF NOT EXISTS reject_" + name + " (id TEXT, start TEXT, end TEXT, days TEXT, reason TEXT)"
         cur.execute(stmt)
         self.conn.commit()
         cur.close()
@@ -55,13 +55,21 @@ class DBHelper:
         cur.execute(stmt, args)
         res = cur.fetchone()[0]
         return res
+        
+    def findnameinstance(self, name, dept):
+        cur = self.conn.cursor()
+        stmt = "SELECT COUNT (*) FROM mydb WHERE user = ? AND dept = ?"
+        args = (name, dept)
+        cur.execute(stmt, args)
+        res = cur.fetchone()[0]
+        return res
      
     def removeuser(self, name):
         cur = self.conn.cursor()
         stmt = "DELETE FROM mydb WHERE user = ?"
         args = (name, )
         cur.execute(stmt, args)
-        stmt = "CREATE TABLE IF NOT EXISTS removed (id INTEGER PRIMARY KEY, start TEXT, end TEXT, days TEXT)"
+        stmt = "CREATE TABLE IF NOT EXISTS removed (id TEXT, start TEXT, end TEXT, days TEXT)"
         cur.execute(stmt)
         stmt = "INSERT INTO removed SELECT id,start,end,days FROM approve_" + name
         cur.execute(stmt)
@@ -103,15 +111,15 @@ class DBHelper:
         cur.close()
         return int(res)
         
-    def genleaveid(self, user, days):
+    def genleaveid(self, user, start, days):
         return user[:3] + start + user[-3:] + days
         
     def applyleave(self, user, start, end, days, reason):
-        remaing = self.checkleavedays(user)
-        if remaining > int(days):
-            key = self.genleaveid(slef, user, days)
+        remaining = self.checkleavedays(user)
+        if remaining >= int(days):
+            key = self.genleaveid(user, start, days)
             cur = self.conn.cursor()
-            stmt = "INSERT INTO " + user + "_apply VALUES (?, ?, ?, ?, ?)"
+            stmt = "INSERT INTO apply_" + user + " VALUES (?, ?, ?, ?, ?)"
             args = (key, start, end, days, reason)
             cur.execute(stmt, args)
             self.conn.commit()
@@ -121,6 +129,7 @@ class DBHelper:
             return False
             
     def approve(self, user, id):
+        cur = self.conn.cursor()
         stmt = "SELECT days FROM apply_" + user + " WHERE id = ?"
         args = (id, )
         cur.execute(stmt, args)
@@ -134,6 +143,14 @@ class DBHelper:
         cur.execute(stmt, args)
         self.conn.commit()
         cur.close()
+        
+    def findsuper(self, dept):
+        cur = self.conn.cursor()
+        stmt = "SELECT chatid FROM mydb WHERE dept = ? AND admin = 'Yes'"
+        args = (dept, )
+        cur.execute(stmt, args)
+        res = cur.fetchone()[0]
+        return res
         
         
     def test(self):

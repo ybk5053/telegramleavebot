@@ -25,7 +25,7 @@ class Applystartdatesession(Waitdatesession):
 
 class Applyenddatesession(Waitdatesession):
     def __init__(self, chatsession, showndate):
-        super().__init__(chatsession=chatsession,showndate=showndate)
+        super().__init__(chatsession=chatsession,showndate=showndate,blockdate=showndate)
         self.reply = "Leave starting on: " + self.datetostring(self.leavestart) + "\nEnter leave ending date"
 
     def datetostring(self, date):

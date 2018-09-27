@@ -49,7 +49,7 @@ class Removeusersession(AddRemoveSession):
         
     def checknameexist(self, name):
         db = DBHelper()
-        res = db.findnameinstance(name)
+        res = db.findnameinstance(name, self.dept)
         db.close()
         return res
         
