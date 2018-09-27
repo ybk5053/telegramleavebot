@@ -12,10 +12,11 @@ from dbhelper import DBHelper
 from sessions import *
 from actionsession import Waitactionsession
 from loginsessions import Tryloginsession
+import keys
 
 sessions = []
 
-token = '677641802:AAFFA9eSFHxk_CwdGlbZv1TploStJsNlJ1Q'
+token = keys.token
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.INFO)
 
 def checkforactivesession(id):
