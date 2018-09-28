@@ -6,16 +6,13 @@ from dbhelper import DBHelper
 from sessions import *
 
 
-pin_keyboard = [[InlineKeyboardButton('1', callback_data='1'), InlineKeyboardButton('2', callback_data='2'), InlineKeyboardButton('3', callback_data='3')],
-        [InlineKeyboardButton('4', callback_data='4'), InlineKeyboardButton('5', callback_data='5'), InlineKeyboardButton('6', callback_data='6')],
-        [InlineKeyboardButton('7', callback_data='7'), InlineKeyboardButton('8', callback_data='8'), InlineKeyboardButton('9', callback_data='9')],
-        [InlineKeyboardButton('Cancel', callback_data='Cancel')]]
         
-class Checkpinsession(Session):
+class Checkpinsession(ButtonSession): #check old pin
     def __init__(self, chatsession):
         super().__init__(session=chatsession)
         self.keyboard = pin_keyboard
         self.reply = "Enter current pin (4 more num)"
+        self.passwd = ""
         
     def checkpin(self):
         db = DBHelper()
@@ -25,7 +22,7 @@ class Checkpinsession(Session):
         
         
     def handle(self, data, time, lastmessageid):
-        super().handle(time, lastmessageid)
+        super().handle(data, time, lastmessageid)
         if data == "Cancel":
             self.passwd = ""
             length = 4
@@ -44,14 +41,15 @@ class Checkpinsession(Session):
             self.reply = "Enter current pin (" + str(length) + " more num)"
             return retval(self)
           
-class Newpinsession(Session):
+class Newpinsession(ButtonSession): #enter new pin
     def __init__(self, chatsession):
         super().__init__(session=chatsession)
         self.keyboard = pin_keyboard
         self.reply = "Enter new Pin (4 more num)"
+        self.passwd = ""
         
     def handle(self, data, time, lastmessageid):
-        super().handle(time, lastmessageid)
+        super().handle(data, time, lastmessageid)
         if data == "Cancel":
             self.passwd = ""
             length = 4
@@ -65,12 +63,13 @@ class Newpinsession(Session):
             self.reply = "Enter new pin (" + str(length) + " more num)"
             return retval(self)
             
-class Checknewpinsession(Session):
+class Checknewpinsession(ButtonSession): #double check new pin
     def __init__(self, chatsession):
         super().__init__(session=chatsession)
         self.keyboard = pin_keyboard
         self.reply = "Reenter new pin (4 more num)"
         self.passwd = chatsession.passwd
+        self.newpasswd = ""
         
     def checkpin(self):
         if self.passwd == self.newpasswd:
@@ -83,7 +82,7 @@ class Checknewpinsession(Session):
         
         
     def handle(self, data, time, lastmessageid):
-        super().handle(time, lastmessageid)
+        super().handle(data, time, lastmessageid)
         if data == "Cancel":
             self.newpasswd = ""
             length = 4
@@ -102,15 +101,6 @@ class Checknewpinsession(Session):
             return retval(self)
             
             
-
-def main():
-    s = Session(123, datetime.datetime.now())
-    s2 = Session(124, datetime.datetime.now(), session=s)
-    print(s2.chat_id)
-    print(s2.wait)
-
-if __name__ == '__main__':
-    main()
 
 
 

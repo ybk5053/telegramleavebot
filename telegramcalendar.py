@@ -18,7 +18,7 @@ def create_calendar(year,month,blockdate):
     for week in my_calendar:
         row=[]
         for day in week:
-            if(day==0) or (blockdate.year==year and blockdate.month==month and day<=blockdate.day):
+            if(day==0) or (blockdate.year<=year and blockdate.month<=month and day<blockdate.day):
                 row.append(InlineKeyboardButton(" ",callback_data="ignore"))
             else:
                 row.append(InlineKeyboardButton(str(day),callback_data="calendar-day-"+str(day)))

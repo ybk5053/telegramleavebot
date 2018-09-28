@@ -2,40 +2,40 @@ import datetime
 
 from telegram import InlineKeyboardButton
 
-from telegramcalendar import create_calendar
-
 from dbhelper import DBHelper
 
-class retval:
+
+pin_keyboard = [[InlineKeyboardButton('1', callback_data='1'), InlineKeyboardButton('2', callback_data='2'), InlineKeyboardButton('3', callback_data='3')],
+        [InlineKeyboardButton('4', callback_data='4'), InlineKeyboardButton('5', callback_data='5'), InlineKeyboardButton('6', callback_data='6')],
+        [InlineKeyboardButton('7', callback_data='7'), InlineKeyboardButton('8', callback_data='8'), InlineKeyboardButton('9', callback_data='9')],
+        [InlineKeyboardButton('Cancel', callback_data='Cancel')]]
+        
+        
+
+class retval: #return type for session.handle ##reply value used to get bot to do return to /start menu, send extra msg
     def __init__(self, session, reply=None):
         self.session = session
         self.reply = reply
 
-class Session:
+class Session:  #base session class for session.handle
     
     #start, chat_id, login, user, passwd, dept, admin, lastmessageid
     #adduser, adddept, addadmin
     #
 
     def __init__(self, chatid=None, starttime=None, session=None):
-        self.keyboard = None
-        self.leavestart = None
-        self.leaveend = None
-        self.newpasswd = ""
-        self.adduser = ""
-        self.adddept = ""
-        self.addadmin = "No"
-        self.passwd = ""
+        self.keyboard = None #inline keyboard to appear together with reply
+        self.reply = "" #text to reply with
         if session is None:
-            self.start = starttime
-            self.chat_id = chatid
-            self.login = False
-            self.user = ""
-            self.dept = ""
-            self.admin = False
-            self.lastmessageid = None
+            self.start = starttime  #timestamp for timeout
+            self.chat_id = chatid  #chat id for session to talk to
+            self.login = False #check if user is login
+            self.user = "" #name of user
+            self.dept = "" #dept of user
+            self.admin = False #if user is admin
+            self.lastmessageid = None #to edit last message incase timeout
         else:
-            self.start = session.start
+            self.start = session.start 
             self.chat_id = session.chat_id
             self.login = session.login
             self.user = session.user
@@ -43,74 +43,21 @@ class Session:
             self.admin = session.admin
             self.lastmessageid = session.lastmessageid
             
-    def timeout(self, time):
+    def timeout(self, time):  #timeout run by bot every 5 mins
         if (time-self.start).total_seconds() < 600:
             return (self.chat_id, self.lastmessageid)
             
-    def handle(self, time, lastmessageid):
+    def handle(self, data, time, lastmessageid):  #handle message or button press
         self.lastmessageid = lastmessageid
         self.start = time
         
+class ButtonSession(Session):   #for sessions with inlinekeyboard
+    pass
+    
+class TextSession(Session): #for sessions expect text reply
+    pass
+    
 
-            
-
-class Waitdatesession(Session):
-    def __init__(self, chatsession, showndate, blockdate=None):
-        super().__init__(session=chatsession)
-        self.leavestart = chatsession.leavestart
-        self.leaveend = chatsession.leaveend
-        self.showndate = showndate
-        if blockdate is None:
-            self.blockdate = datetime.datetime.now()
-        else:
-            self.blockdate = blockdate
-        self.keyboard = self.calendar(showndate)
-        
-    def handle(self, time, lastmessageid):
-        super().handle(time, lastmessageid)
-            
-    #data == 'next-month'
-    def next_month(self):
-        month = self.showndate.month
-        year = self.showndate.year
-        month+=1
-        if month>12:
-            month=1
-            year+=1
-        return self.showndate.replace(year=year,month=month)
-
-    #data == 'previous-month'
-    def previous_month(self):
-        month = self.showndate.month
-        year = self.showndate.year
-        month-=1
-        if month<1:
-            month=12
-            year-=1
-        return self.showndate.replace(year=year,month=month)
-            
-    #call.data[0:13] == 'calendar-day-'
-    def get_day(self, data):
-        day=data[13:]
-        date = datetime.datetime(int(self.showndate.year),int(self.showndate.month),int(day),0,0,0)
-        return date
-        
-        
-    def calendar(self, time):
-        return create_calendar(time.year, time.month, self.blockdate)
-        
-        
-        
-        
-                
-def main():
-    s = Session(123, datetime.datetime.now())
-    s2 = Session(124, datetime.datetime.now(), session=s)
-    print(s2.chat_id)
-    print(s2.wait)
-
-if __name__ == '__main__':
-    main()
 
 
 
