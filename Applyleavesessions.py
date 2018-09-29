@@ -8,17 +8,18 @@ from sessions import *
 #todo at confirm button for calendar
 
 class Waitdatesession(ButtonSession): #contains calendar keyboard
-    def __init__(self, chatsession, showndate, blockdate=None):
+    def __init__(self, chatsession, showndate, start, blockdate=None):
         super().__init__(session=chatsession)
         self.showndate = showndate
         if blockdate is None:
             self.blockdate = datetime.datetime.now()
         else:
             self.blockdate = blockdate
-        self.keyboard = self.calendar(showndate)
+        self.keyboard = self.calendar(showndate, start)
         
     def handle(self, data, time, lastmessageid):
         super().handle(data, time, lastmessageid)
+        
             
     #data == 'next-month'
     def next_month(self):
@@ -47,22 +48,48 @@ class Waitdatesession(ButtonSession): #contains calendar keyboard
         return date
         
         
-    def calendar(self, time):
-        return create_calendar(time.year, time.month, self.blockdate)
+    def calendar(self, time, start):
+        return create_calendar(time.year, time.month, self.blockdate, start)
+        
+    def datetostring(self, date, am):
+        months_name = ['blank', ' January ', ' Febuary ', ' March ', ' April ', ' May ', ' June ', ' July ', ' August ', ' September ', ' October ', ' November ', ' December ']
+        day = str(date.day)
+        month = months_name[date.month]
+        year = str(date.year)
+        if len(day) < 2:
+            day = "0" + day
+        return day + month + year + " " + am
             
 class Applystartdatesession(Waitdatesession): #wait for start date selection
     def __init__(self, chatsession, showndate):
-        super().__init__(chatsession=chatsession,showndate=showndate)
-        self.reply = "Select leave starting date"
+        super().__init__(chatsession=chatsession,showndate=showndate,start=True)
+        self.startam = "am"
+        self.reply = self.newreply()
+        
+    def newreply(self):
+        return "Leave starting on: " + self.datetostring(self.showndate, self.startam) + "\nConfirm to confirm starting date"
         
     def handle(self, data, time, lastmessageid):
         super().handle(data, time, lastmessageid)
         if data == "next-month":
-            return retval(Applystartdatesession(self, self.next_month()))
-        elif data == " previous-month":
-            return retval(Applystartdatesession(self, self.previous_month()))
+            self.showndate = self.next_month()
+            self.keyboard = self.calendar(self.showndate, True)
+            self.reply = self.newreply()
+            return retval(self)
+        elif data == "previous-month":
+            self.showndate = self.previous_month()
+            self.keyboard = self.calendar(self.showndate, True)
+            self.reply = self.newreply()
+            return retval(self)
         elif data[0:13] == "calendar-day-":
             self.showndate = self.get_day(data)
+            self.reply = self.newreply()
+            return retval(self)
+        elif data == "am" or data == "pm":
+            self.startam = data
+            self.reply = self.newreply()
+            return retval(self)
+        elif data == "Confirm":
             self.leavestart = self.showndate
             return retval(Applyenddatesession(self, self.showndate))
         elif data == "ignore":
@@ -70,28 +97,37 @@ class Applystartdatesession(Waitdatesession): #wait for start date selection
 
 class Applyenddatesession(Waitdatesession): #wait for end date selection
     def __init__(self, chatsession, showndate):
-        super().__init__(chatsession=chatsession,showndate=showndate,blockdate=showndate)
+        super().__init__(chatsession=chatsession,showndate=showndate,start=False,blockdate=showndate)
         self.leavestart = chatsession.leavestart
-        self.reply = "Leave starting on: " + self.datetostring(self.leavestart) + "\nEnter leave ending date"
+        self.startam = chatsession.startam
+        self.endam = "night"
+        self.reply = self.newreply()
         
+    def newreply(self):
+        print(self.startam)
+        return "Leave starting on: " + self.datetostring(self.leavestart, self.startam) + "\nLeave ending on: " + self.datetostring(self.showndate, self.endam) + "\nConfirm to confirm ending date"
 
-    def datetostring(self, date):
-        months_name = ['blank', ' January ', ' Febuary ', ' March ', ' April ', ' May ', ' June ', ' July ', ' August ', ' September ', ' October ', ' November ', ' December ']
-        day = str(date.day)
-        month = months_name[date.month]
-        year = str(date.year)
-        if len(day) < 2:
-            day = "0" + day
-        return day + month + year
-        
     def handle(self, data, time, lastmessageid):
         super().handle(data, time, lastmessageid)
         if data == "next-month":
-            return retval(Applyenddatesession(self, self.next_month()))
-        elif data == " previous-month":
-            return retval(Applyenddatesession(self, self.previous_month()))
+            self.showndate = self.next_month()
+            self.keyboard = self.calendar(self.showndate, True)
+            self.reply = self.newreply()
+            return retval(self)
+        elif data == "previous-month":
+            self.showndate = self.previous_month()
+            self.keyboard = self.calendar(self.showndate, True)
+            self.reply = self.newreply()
+            return retval(self)
         elif data[0:13] == "calendar-day-":
             self.showndate = self.get_day(data)
+            self.reply = self.newreply()
+            return retval(self)
+        elif data == "pm" or data == "eve":
+            self.endam = data
+            self.reply = self.newreply()
+            return retval(self)
+        elif data == "Confirm":
             self.leaveend = self.showndate
             return retval(Applyreasonsession(self))
         elif data == "ignore":
@@ -101,17 +137,19 @@ class Applyreasonsession(TextSession): #enter a reason for leave
     def __init__(self, chatsession):
         super().__init__(session=chatsession)
         self.leavestart = chatsession.leavestart
+        self.startam = chatsession.startam
         self.leaveend = chatsession.leaveend
-        self.reply = "Leave starting on: " + self.datetostring(self.leavestart) + "\nLeave ending on: " + self.datetostring(self.leaveend) + "\nWhat is your reason for leave?"
+        self.endam = chatsession.endam
+        self.reply = "Leave starting on: " + self.datetostring(self.leavestart, self.startam) + "\nLeave ending on: " + self.datetostring(self.leaveend, self.endam) + "\nEnter reason for leave?"
         
-    def datetostring(self, date):
+    def datetostring(self, date, am):
         months_name = ['blank', ' January ', ' Febuary ', ' March ', ' April ', ' May ', ' June ', ' July ', ' August ', ' September ', ' October ', ' November ', ' December ']
         day = str(date.day)
         month = months_name[date.month]
         year = str(date.year)
         if len(day) < 2:
             day = "0" + day
-        return day + month + year
+        return day + month + year + " " + am
         
     def handle(self, data, time, lastmessageid):
         super().handle(data, time, lastmessageid)
@@ -124,7 +162,7 @@ class Applyreasonsession(TextSession): #enter a reason for leave
     def applyleave(self):
         leavedays = self.checkleavedays()
         db = DBHelper()
-        if db.applyleave(self.user, self.leavestart.strftime('%d/%m/%Y'), self.leaveend.strftime('%d/%m/%Y'), str(leavedays), self.leavereason):
+        if db.applyleave(self.user, self.leavestart.strftime('%d/%m/%Y') + " " + self.startam, self.leaveend.strftime('%d/%m/%Y') + " " + self.endam, str(leavedays), self.leavereason):
             #datetime.strptime(date, '%m/%d/%Y') for string to date
             return True
         else:
@@ -133,20 +171,29 @@ class Applyreasonsession(TextSession): #enter a reason for leave
     def checkleavedays(self):
         delta = (self.leaveend - self.leavestart).days + 1
         wkday = self.leavestart.weekday()
-        days = 0
+        days = 0.0
         for x in range(0, delta):
             if wkday < 5:
                 days += 1
             wkday += 1
             if wkday > 6:
                 wkday = 0
+        if self.startam == "pm":
+            days = days - 0.5
+        if self.endam == "pm":
+            days = days - 0.5
         return days
                 
 def main():
-    d1 = datetime.datetime.strptime('10/10/2018', '%d/%m/%Y')
-    d2 = datetime.datetime.strptime('13/10/2018', '%d/%m/%Y')
-    print((d2 - d1).days)
-
+    num = "10"
+    num2 = float(num)
+    num3 = num2 + 0.5
+    #str = "{:.1f}".format(num)
+    print(num3)
+    print(num)
+    print(num2)
+    
+    
 if __name__ == '__main__':
     main()
 

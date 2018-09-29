@@ -139,21 +139,21 @@ class DBHelper:
         self.conn.commit()
         cur.close()
         
-    def checkleavedays(self, user):  ##return user remaining leave int
+    def checkleavedays(self, user):  ##return user remaining leave float
         cur = self.conn.cursor()
         stmt = "SELECT remaining FROM mydb WHERE user = ?"
         args = (user, )
         cur.execute(stmt, args)
         res = cur.fetchone()[0]
         cur.close()
-        return int(res)
+        return float(res)
         
     def genleaveid(self, user, start, days): ##return unique leaveid
         return user[:3] + start + user[-3:] + days
         
     def applyleave(self, user, start, end, days, reason): ##add to apply_user table
         remaining = self.checkleavedays(user)
-        if remaining >= int(days):
+        if remaining >= float(days):
             key = self.genleaveid(user, start, days)
             cur = self.conn.cursor()
             stmt = "INSERT INTO apply_" + user + " VALUES (?, ?, ?, ?, ?)"
@@ -241,7 +241,7 @@ class DBHelper:
         stmt = "SELECT days FROM apply_" + user + " WHERE id = ?"
         args = (id, )
         cur.execute(stmt, args)
-        remaining = self.checkleavedays(user) - int(cur.fetchone()[0])
+        remaining = self.checkleavedays(user) - float(cur.fetchone()[0])
         if remaining < 0:
             cur.close()
             return False
@@ -278,12 +278,12 @@ class DBHelper:
             args = (id, )
             cur.execute(stmt, args)
             res = cur.fetchone()
-            start = datetime.datetime.strptime(res[0], '%d/%m/%Y')
+            start = datetime.datetime.strptime(res[0][:10], '%d/%m/%Y')
             if datetime.datetime.now() < start: #check leave havent started or ended  ##add leavedays back to remaining
                 stmt = "SELECT remaining FROM mydb WHERE user = ?"
                 args = (user, )
                 cur.execute(stmt, args)
-                remaining = int(res[1]) + int(cur.fetchone()[0])
+                remaining = float(res[1]) + float(cur.fetchone()[0])
                 stmt = "UPDATE mydb SET remaining = ? WHERE user = ?"
                 args = (str(remaining), user)
                 cur.execute(stmt, args)
@@ -314,7 +314,7 @@ class DBHelper:
             name = user[0]
             approve = self.getappliedleaves(name)
             for leave in approve:
-                if datetime.datetime.strptime(leave[2], '%d/%m/%Y') < date: 
+                if datetime.datetime.strptime(leave[2][:10], '%d/%m/%Y') < date: 
                     self.removeleave(name, leave[0], "approve_")
                     
             reject = self.getrejectedleaves(name)
@@ -323,7 +323,7 @@ class DBHelper:
                     
             apply = self.getappliedleaves(name)
             for leave in apply:
-                if datetime.datetime.strptime(leave[2], '%d/%m/%Y') < date:
+                if datetime.datetime.strptime(leave[2][:10], '%d/%m/%Y') < date:
                     self.removeleave(name, leave[0], "apply_")
                     
         self.conn.commit()
