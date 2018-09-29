@@ -28,7 +28,7 @@ class Addusersession(TextSession):
                 return retval(Waitdeptsession(self))
             else:
                 self.adddept = self.dept
-                return retval(Adminyesnosession(self))
+                return retval(Addusertotalleavesession(self))
         else:
             return retval(self, "Username already exist!")
         
@@ -59,30 +59,6 @@ class Removeusersession(TextSession):
             return retval(self, data + " have been removed.")
         else:
             return retval(self, data + " not found.")
-
-class Adminyesnosession(ButtonSession):
-    def __init__(self, chatsession):
-        super().__init__(session=chatsession)
-        self.keyboard = [[InlineKeyboardButton('Yes', callback_data='Yes'), InlineKeyboardButton('No', callback_data='No')]]
-        self.reply = "Admin?"
-        self.adduser = chatsession.adduser
-        self.adddept = chatsession.adddept
-
-    def createuser(self):
-        if not self.admin:
-            return False
-        db = DBHelper()
-        db.createuser(self.adduser, default_pass, self.adddept, self.addadmin)
-        db.close()
-        return True
-        
-    def handle(self, data, time, lastmessageid):
-        super().handle(data, time, lastmessageid)
-        self.addadmin = data
-        if self.createuser():
-            return retval(self, "New User Created.")
-        else:
-            return retval(self, "Failed Creating User.")
                 
 class Waitdeptsession(ButtonSession):
     def __init__(self, chatsession):
@@ -109,11 +85,88 @@ class Waitdeptsession(ButtonSession):
     def handle(self, data, time, lastmessageid):
         super().handle(data, time, lastmessageid)
         self.adddept = data
-        return retval(Adminyesnosession(self))
+        return retval(Addusertotalleavesession(self))
             
+class Addusertotalleavesession(TextSession):
+    def __init__(self, chatsession):
+        super().__init__(session=chatsession)
+        self.reply = "Enter annual leaves"
+        self.adduser = chatsession.adduser
+        self.adddept = chatsession.adddept
+        
+    def is_number(num):
+        try:
+            n = float(num)
+            while n > 0:
+                n= n - 0.5
+            if n == 0:
+                return True
+            else:
+                return False
+        except ValueError:
+            return False
+        
+    def handle(self, data, time, lastmessageid):
+        super().handle(data, time, lastmessageid)
+        if self.is_number(data):
+            self.addtotal = data
+            return retval(Adduserleavesession(self))
+        else:
+            return retval(self, "Invalid format(Number only)")
             
+class Adduserleavesession(TextSession):
+    def __init__(self, chatsession):
+        super().__init__(session=chatsession)
+        self.reply = "Enter remaining leaves"
+        self.adduser = chatsession.adduser
+        self.adddept = chatsession.adddept
+        self.addtotal = chatsession.addtotal
+        
+    def is_number(num):
+        try:
+            n = float(num)
+            while n > 0:
+                n= n - 0.5
+            if n == 0:
+                return True
+            else:
+                return False
+        except ValueError:
+            return False
+        
+    def handle(self, data, time, lastmessageid):
+        super().handle(data, time, lastmessageid)
+        if self.is_number(data):
+            self.addremain = data
+            return retval(Adminyesnosession(self))
+        else:
+            return retval(self, "Invalid format(Number only)")
            
-   
+class Adminyesnosession(ButtonSession):
+    def __init__(self, chatsession):
+        super().__init__(session=chatsession)
+        self.keyboard = [[InlineKeyboardButton('Yes', callback_data='Yes'), InlineKeyboardButton('No', callback_data='No')]]
+        self.reply = "Admin?"
+        self.adduser = chatsession.adduser
+        self.adddept = chatsession.adddept
+        self.addtotal = chatsession.addtotal
+        self.addremain = chatsession.addremain
+
+    def createuser(self):
+        if not self.admin:
+            return False
+        db = DBHelper()
+        db.createuser(self.adduser, default_pass, self.adddept, self.addadmin, self.addtotal, self.addremain)
+        db.close()
+        return True
+        
+    def handle(self, data, time, lastmessageid):
+        super().handle(data, time, lastmessageid)
+        self.addadmin = data
+        if self.createuser():
+            return retval(self, "New User Created.Default pin is 1234")
+        else:
+            return retval(self, "Failed Creating User.")
    
 
 

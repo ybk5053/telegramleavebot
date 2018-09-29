@@ -46,8 +46,11 @@ class Seeleavesession(ButtonSession): #choose to view accepted, pending or rejec
     def __init__(self, chatsession, user):
         super().__init__(session=chatsession)
         self.checkleave = user #name of user which leave being viewed
+        db = DBHelper()
+        left = str(db.checkleavedays(user))
+        db.close()
         self.keyboard = app_keyboard
-        self.reply = "Approved or Applied"
+        self.reply = user + " has " + left + " leaves remaining"
         
         
     def handle(self, data, time, lastmessageid):
@@ -65,6 +68,7 @@ class Seeapprovedsession(ButtonSession): #see list of all approved for checkuser
         self.checkleave = chatsession.checkleave
         db = DBHelper()
         res = db.getapprovedleaves(self.checkleave)
+        left = str(db.checkleavedays(self.user))
         db.close()
         self.leaveids = []
         buttons = []
@@ -73,7 +77,7 @@ class Seeapprovedsession(ButtonSession): #see list of all approved for checkuser
             self.leaveids.append(leaves[0])
         buttons.append([InlineKeyboardButton('Back', callback_data='Back')])
         self.keyboard = buttons
-        self.reply = "Which one"
+        self.reply = self.user + " has " + left + " leaves remaining"
         
         
     def handle(self, data, time, lastmessageid):
@@ -89,6 +93,7 @@ class Seeappliedsession(ButtonSession):  #see list of all applied for checkuser
         self.checkleave = chatsession.checkleave
         db = DBHelper()
         res = db.getappliedleaves(self.checkleave)
+        left = str(db.checkleavedays(self.user))
         db.close()
         self.leaveids = []
         buttons = []
@@ -97,7 +102,7 @@ class Seeappliedsession(ButtonSession):  #see list of all applied for checkuser
             self.leaveids.append(leaves[0])
         buttons.append([InlineKeyboardButton('Back', callback_data='Back')])
         self.keyboard = buttons
-        self.reply = "Which one"
+        self.reply = self.user + " has " + left + " leaves remaining"
         
         
     def handle(self, data, time, lastmessageid):
@@ -113,13 +118,14 @@ class Seerejectedsession(ButtonSession):  #see list of all rejected for checkuse
         self.checkleave = chatsession.checkleave
         db = DBHelper()
         res = db.getrejectedleaves(self.checkleave)
+        left = str(db.checkleavedays(self.user))
         db.close()
         buttons = []
         for leaves in res:
             buttons.append([InlineKeyboardButton(leaves[1] + " - " + leaves[2] + ": " + leaves[4], callback_data="ignore")])
         buttons.append([InlineKeyboardButton('Back', callback_data='Back')])
         self.keyboard = buttons
-        self.reply = "Tap back to go back"
+        self.reply = self.user + " has " + left + " leaves remaining"
         
         
     def handle(self, data, time, lastmessageid):
@@ -141,7 +147,7 @@ class Waitappliedactionsession(ButtonSession):  #view, cancel(own leaves only), 
             self.keyboard = adminappliedaction_keyboard
         else:
             self.keyboard = appliedaction_keyboard
-        self.reply = "Leave from: " + res[1] + " to " + res[2] + "\nReason: " + res[4]
+        self.reply = "Leave from: " + res[1] + " to " + res[2] + " : " + res[3] + " days\nReason: " + res[4]
         
         
     def handle(self, data, time, lastmessageid):
@@ -195,7 +201,7 @@ class Waitapprovedactionsession(ButtonSession): #view, cancel(own leaves only)
             self.keyboard = approvedaction_keyboard
         else:
             self.keyboard = viewonly_keyboard
-        self.reply = "Leave from: " + res[1] + " to " + res[2] + "\nReason: " + res[4]
+        self.reply = "Leave from: " + res[1] + " to " + res[2] + " : " + res[3] + " days\nReason: " + res[4]
         
         
     def handle(self, data, time, lastmessageid):

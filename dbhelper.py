@@ -67,10 +67,10 @@ class DBHelper:
             cur.close()
             return False
             
-    def createuser(self, name, pin, dept, admin): ##create req tables for user
+    def createuser(self, name, pin, dept, admin, total, remain): ##create req tables for user
         cur = self.conn.cursor()
-        stmt = "INSERT INTO mydb(user,pass,dept,admin,totalleave,remaining) VALUES (?, ?, ?, ?, '10', '10')"
-        args = (name, pin, dept, admin)
+        stmt = "INSERT INTO mydb(user,pass,dept,admin,totalleave,remaining) VALUES (?, ?, ?, ?, ?, ?)"
+        args = (name, pin, dept, admin, total, remain)
         cur.execute(stmt, args)
         stmt = "CREATE TABLE IF NOT EXISTS approve_" + name + " (id TEXT, start TEXT, end TEXT, days TEXT, reason TEXT)"
         cur.execute(stmt)
