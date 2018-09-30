@@ -104,7 +104,6 @@ class Applyenddatesession(Waitdatesession): #wait for end date selection
         self.reply = self.newreply()
         
     def newreply(self):
-        print(self.startam)
         return "Leave starting on: " + self.datetostring(self.leavestart, self.startam) + "\nLeave ending on: " + self.datetostring(self.showndate, self.endam) + "\nConfirm to confirm ending date"
 
     def handle(self, data, time, lastmessageid):

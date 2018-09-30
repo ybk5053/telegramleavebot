@@ -52,10 +52,12 @@ class Session:  #base session class for session.handle
         self.start = time
         
 class ButtonSession(Session):   #for sessions with inlinekeyboard
-    pass
+    def handle(self, data, time, lastmessageid):  #handle message or button press
+        super().handle(data, time, lastmessageid)
     
 class TextSession(Session): #for sessions expect text reply
-    pass
+    def handle(self, data, time, lastmessageid):  #handle message or button press
+        super().handle(data, time, lastmessageid)
     
 
 

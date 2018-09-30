@@ -68,7 +68,7 @@ class Seeapprovedsession(ButtonSession): #see list of all approved for checkuser
         self.checkleave = chatsession.checkleave
         db = DBHelper()
         res = db.getapprovedleaves(self.checkleave)
-        left = str(db.checkleavedays(self.user))
+        left = str(db.checkleavedays(self.checkleave))
         db.close()
         self.leaveids = []
         buttons = []
@@ -77,7 +77,7 @@ class Seeapprovedsession(ButtonSession): #see list of all approved for checkuser
             self.leaveids.append(leaves[0])
         buttons.append([InlineKeyboardButton('Back', callback_data='Back')])
         self.keyboard = buttons
-        self.reply = self.user + " has " + left + " leaves remaining"
+        self.reply = self.checkleave + " has " + left + " leaves remaining"
         
         
     def handle(self, data, time, lastmessageid):
@@ -93,7 +93,7 @@ class Seeappliedsession(ButtonSession):  #see list of all applied for checkuser
         self.checkleave = chatsession.checkleave
         db = DBHelper()
         res = db.getappliedleaves(self.checkleave)
-        left = str(db.checkleavedays(self.user))
+        left = str(db.checkleavedays(self.checkleave))
         db.close()
         self.leaveids = []
         buttons = []
@@ -102,7 +102,7 @@ class Seeappliedsession(ButtonSession):  #see list of all applied for checkuser
             self.leaveids.append(leaves[0])
         buttons.append([InlineKeyboardButton('Back', callback_data='Back')])
         self.keyboard = buttons
-        self.reply = self.user + " has " + left + " leaves remaining"
+        self.reply = self.checkleave + " has " + left + " leaves remaining"
         
         
     def handle(self, data, time, lastmessageid):
@@ -118,14 +118,14 @@ class Seerejectedsession(ButtonSession):  #see list of all rejected for checkuse
         self.checkleave = chatsession.checkleave
         db = DBHelper()
         res = db.getrejectedleaves(self.checkleave)
-        left = str(db.checkleavedays(self.user))
+        left = str(db.checkleavedays(self.checkleave))
         db.close()
         buttons = []
         for leaves in res:
             buttons.append([InlineKeyboardButton(leaves[1] + " - " + leaves[2] + ": " + leaves[4], callback_data="ignore")])
         buttons.append([InlineKeyboardButton('Back', callback_data='Back')])
         self.keyboard = buttons
-        self.reply = self.user + " has " + left + " leaves remaining"
+        self.reply = self.checkleave + " has " + left + " leaves remaining"
         
         
     def handle(self, data, time, lastmessageid):

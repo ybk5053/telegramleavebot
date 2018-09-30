@@ -94,7 +94,7 @@ class Addusertotalleavesession(TextSession):
         self.adduser = chatsession.adduser
         self.adddept = chatsession.adddept
         
-    def is_number(num):
+    def is_number(self, num):
         try:
             n = float(num)
             while n > 0:
@@ -122,7 +122,7 @@ class Adduserleavesession(TextSession):
         self.adddept = chatsession.adddept
         self.addtotal = chatsession.addtotal
         
-    def is_number(num):
+    def is_number(self, num):
         try:
             n = float(num)
             while n > 0:

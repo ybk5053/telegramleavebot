@@ -26,10 +26,16 @@ token = keys.token
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.INFO)
 
 def checkforactivesession(id):
+    x = 0
+    session = None
     for s in sessions:
         if s.chat_id == id:
-            return s
-    return None
+            if x == 1:
+                sessions.remove(s)
+            else:
+                session = s
+                x += 1
+    return session
 
 def start(bot, update):
     chatsession = checkforactivesession(update.message.chat_id)
