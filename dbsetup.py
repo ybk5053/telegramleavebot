@@ -12,9 +12,9 @@ date = "01/01/2018" #history up to before date to clear in dd/mm/yyyy
 
 def main():
     db = DBHelper()
-    db.setup(user, passwd) ##<<run to setup for 1st time
-    db.setupdepts(depts)    ##<<run to modify/add dept 
-    #db.clearhistory(date)  ##<<run to clearhistory
+    #db.setup(user, passwd) ##<<run to setup for 1st time
+    #db.setupdepts(depts)    ##<<run to modify/add dept 
+    db.clearhistory(date)  ##<<run to clearhistory
     db.close()
 
 

@@ -170,7 +170,8 @@ class DBHelper:
         stmt = "SELECT chatid FROM mydb WHERE dept = ? AND admin = 'Yes'"
         args = (dept, )
         cur.execute(stmt, args)
-        res = cur.fetchone()[0]
+        #res = cur.fetchone()[0]  ##only 1 super
+        res = cur.fetchall()    ##more than 1 super
         cur.close()
         return res
         
@@ -307,7 +308,7 @@ class DBHelper:
         
     def clearhistory(self, date):
         cur = self.conn.cursor()
-        stmt = "SELECT user FROM mydb WHERE dept != admin"
+        stmt = "SELECT user FROM mydb WHERE dept != 'admin'"
         cur.execute(stmt)
         res = cur.fetchall()
         for user in res:
@@ -326,6 +327,23 @@ class DBHelper:
                 if datetime.datetime.strptime(leave[2][:10], '%d/%m/%Y') < date:
                     self.removeleave(name, leave[0], "apply_")
                     
+        self.conn.commit()
+        cur.close()
+        
+    def resetleave(self):
+        cur = self.conn.cursor()
+        stmt = "SELECT user, totalleave, remaining FROM mydb WHERE dept != 'admin'"
+        cur.execute(stmt)
+        res = cur.fetchall()
+        print(res)
+        for user in res:
+            name = user[0]
+            leave = float(user[1])
+            remain = float(user[2])
+            remain = str(leave + remain)
+            stmt = "Update mydb SET remaining = ? WHERE user = ?"
+            args = (remain, name)
+            cur.execute(stmt, args)
         self.conn.commit()
         cur.close()
         

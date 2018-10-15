@@ -44,7 +44,7 @@ class Session:  #base session class for session.handle
             self.lastmessageid = session.lastmessageid
             
     def timeout(self, time):  #timeout run by bot every 5 mins
-        if (time-self.start).total_seconds() < 600:
+        if (time-self.start).total_seconds() > 600:
             return (self.chat_id, self.lastmessageid)
             
     def handle(self, data, time, lastmessageid):  #handle message or button press

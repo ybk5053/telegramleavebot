@@ -82,7 +82,8 @@ def handle_text(bot, update):
                     db = DBHelper()
                     super_id = db.findsuper(res.session.dept)
                     db.close()
-                    bot.send_message(chat_id=super_id, text=res.session.user + " has applied for leave. Login to check")
+                    for users in super_id:
+                        bot.send_message(chat_id=users[0], text=res.session.user + " has applied for leave. Login to check")
                 elif res.reply == "Leave rejected": ##send message to inform user leave rejected
                     db = DBHelper()
                     chat_id = db.findchatid(res.session.checkleave)
